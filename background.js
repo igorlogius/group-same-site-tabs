@@ -17,7 +17,7 @@ async function grpAllTabsBySite() {
     hidden: false,
   });
 
-  const origin_tabIds = new Map(); // str => set(ints)
+  const hostname_tabIds_map = new Map(); // str => set(ints)
 
   all_tabs.forEach((t) => {
     if (typeof t.url !== "string" || !t.url.startsWith("http")) {
@@ -25,9 +25,9 @@ async function grpAllTabsBySite() {
     }
 
     const t_urlobj = new URL(t.url);
-    const t_origin = t_urlobj.origin;
+    const t_hostname = t_urlobj.hostname;
 
-    tmp = origin_tabIds.get(t_origin);
+    tmp = hostname_tabIds_map.get(t_hostname);
 
     if (!tmp) {
       tmp = new Set();
@@ -35,21 +35,19 @@ async function grpAllTabsBySite() {
     tmp.add(t.id);
 
     //
-    origin_tabIds.set(t_origin, tmp);
+    hostname_tabIds_map.set(t_hostname, tmp);
   });
 
   // create the groups and move the tabs
-  for (const [k, v] of origin_tabIds) {
+  for (const [k, v] of hostname_tabIds_map) {
     console.debug(k, v);
     const grpId = await browser.tabs.group({
       tabIds: [...v],
     });
 
-    if (browser.tabGroups) {
-      browser.tabGroups.update(grpId, {
-        title: k,
-      });
-    }
+    browser.tabGroups.update(grpId, {
+      title: k,
+    });
   }
 }
 
@@ -64,11 +62,13 @@ browser.menus.create({
     });
 
     if (!atab.highlighted) {
-      const atab_origin = new URL(atab.url).origin;
-      grpTabsBySite(all_tabs, [atab_origin]);
+      const atab_hostname = new URL(atab.url).hostname;
+      grpTabsBySite(all_tabs, [atab_hostname]);
     } else {
       const sites = new Set(
-        all_tabs.filter((t) => t.highlighted).map((t) => new URL(t.url).origin),
+        all_tabs
+          .filter((t) => t.highlighted)
+          .map((t) => new URL(t.url).hostname),
       );
       grpTabsBySite(all_tabs, [...sites]);
     }
