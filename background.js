@@ -1,15 +1,19 @@
 /* global browser */
 
 async function grpTabsBySite(all_tabs, sites) {
-  console.debug(sites);
-  sites.forEach((site) => {
+  sites.forEach(async (site) => {
     const tabIds = all_tabs
       .filter((t) => {
         const turl = new URL(t.url);
         return turl.hostname === site;
       })
       .map((t) => t.id);
-    browser.tabs.group({ tabIds });
+
+    const grpId = await browser.tabs.group({ tabIds });
+
+    browser.tabGroups.update(grpId, {
+      title: site,
+    });
   });
 }
 
@@ -44,7 +48,6 @@ async function grpAllTabsBySite() {
 
   // create the groups and move the tabs
   for (const [k, v] of hostname_tabIds_map) {
-    console.debug(k, v);
     const grpId = await browser.tabs.group({
       tabIds: [...v],
     });
