@@ -1,9 +1,13 @@
 /* global browser */
 
 async function grpTabsBySite(all_tabs, sites) {
+  console.debug(sites);
   sites.forEach((site) => {
     const tabIds = all_tabs
-      .filter((t) => t.url.startsWith(site))
+      .filter((t) => {
+        const turl = new URL(t.url);
+        return turl.hostname === site;
+      })
       .map((t) => t.id);
     browser.tabs.group({ tabIds });
   });
