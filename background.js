@@ -17,8 +17,30 @@ async function grpTabsBySite(all_tabs, sites) {
   });
 }
 
-async function grpAllTabsBySite() {
-  // 1. get all tabs
+async function grpSingleSite(site) {
+  const all_tabs = await browser.tabs.query({
+    currentWindow: true,
+    pinned: false,
+    hidden: false,
+  });
+  grpTabsBySite(all_tabs, [site]);
+}
+
+async function grpSelectedSites() {
+  const all_tabs = await browser.tabs.query({
+    currentWindow: true,
+    pinned: false,
+    hidden: false,
+  });
+
+  const sites = new Set(
+    all_tabs.filter((t) => t.highlighted).map((t) => new URL(t.url).hostname),
+  );
+
+  grpTabsBySite(all_tabs, [...sites]);
+}
+
+async function grpAllSites() {
   const all_tabs = await browser.tabs.query({
     currentWindow: true,
     pinned: false,
@@ -59,33 +81,37 @@ async function grpAllTabsBySite() {
 }
 
 browser.menus.create({
-  title: "This/These Tabs",
+  title: "Selected Sites",
   contexts: ["tab"],
   onclick: async (clickdata, atab) => {
-    const all_tabs = await browser.tabs.query({
-      currentWindow: true,
-      pinned: false,
-      hidden: false,
-    });
-
     if (!atab.highlighted) {
-      const atab_hostname = new URL(atab.url).hostname;
-      grpTabsBySite(all_tabs, [atab_hostname]);
+      grpSingleSite(new URL(atab.url).hostname);
     } else {
-      const sites = new Set(
-        all_tabs
-          .filter((t) => t.highlighted)
-          .map((t) => new URL(t.url).hostname),
-      );
-      grpTabsBySite(all_tabs, [...sites]);
+      grpSelectedSites();
     }
   },
 });
 
 browser.menus.create({
-  title: "All Tabs",
+  title: "All Sites",
   contexts: ["tab"],
   onclick: async (clickdata, tab) => {
-    grpAllTabsBySite();
+    grpAllSites();
   },
 });
+
+function onCommand(cmd) {
+  switch (cmd) {
+    case "group-all":
+      grpAllSites();
+      break;
+    case "group-selected":
+      grpSelectedSites();
+      break;
+    default:
+      break;
+  }
+}
+
+browser.browserAction.onClicked.addListener(grpAllSites);
+browser.commands.onCommand.addListener(onCommand);
