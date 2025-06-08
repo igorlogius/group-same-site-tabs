@@ -13,6 +13,7 @@ async function grpTabsBySite(all_tabs, sites) {
 
     browser.tabGroups.update(grpId, {
       title: site,
+      collapsed: true,
     });
   });
 }
