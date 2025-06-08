@@ -77,6 +77,7 @@ async function grpAllSites() {
 
     browser.tabGroups.update(grpId, {
       title: k,
+      collapsed: true,
     });
   }
 }
