@@ -11,6 +11,7 @@ async function grpTabsBySite(all_tabs, sites) {
 
     const grpId = await browser.tabs.group({ tabIds });
 
+    site = site.startsWith("www.") ? site.slice(4) : site;
     browser.tabGroups.update(grpId, {
       title: site,
       collapsed: true,
@@ -70,11 +71,12 @@ async function grpAllSites() {
   });
 
   // create the groups and move the tabs
-  for (const [k, v] of hostname_tabIds_map) {
+  for (let [k, v] of hostname_tabIds_map) {
     const grpId = await browser.tabs.group({
       tabIds: [...v],
     });
 
+    k = k.startsWith("www.") ? k.slice(4) : k;
     browser.tabGroups.update(grpId, {
       title: k,
       collapsed: true,
